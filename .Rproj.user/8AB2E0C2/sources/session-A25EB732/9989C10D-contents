@@ -1,0 +1,278 @@
+---
+title: "marcel_santos"
+author: "Maurício Bueno"
+date: "2022-08-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pacotes
+```{r}
+library(tidyverse)
+```
+
+```{r}
+cars
+
+ggplot(cars,aes(x = speed, y = dist)) + 
+  geom_point(color = 'red', size = 3) + 
+  theme_bw() +
+  labs(title = 'Meu Gráfico Bacaninha',
+       caption = 'Maurício')
+```
+
+# Regressão linear simples
+```{r}
+library(readxl)
+
+install.packages("ggpubr")
+install.packages("ggcorrplot")
+library(ggpubr)
+
+setwd("~/R/cursos/marcel_santos/evento_aula2")
+
+alunos <- read_excel("dados/alunos.xlsx")
+
+ggplot(alunos, aes(x = horas, y = notas)) +
+  geom_point(shape = 21, size = 2.8, fill = "lightblue", col = "blue") + 
+  geom_smooth(method = "lm", col = "tomato", se = FALSE, formula = "y ~ x") +
+  stat_regline_equation(aes(label = paste(..eq.label..,..rr.label..,sep = "~~"))) + 
+  labs(x = "Horas", y = "Notas",
+       title = "Gráfico de Regressão") + 
+  theme_light()
+
+ggsave(filename = "figuras/grafico_regressao.png")
+
+#====
+
+alunos_se <- read_excel("dados/ind_socio_econ.xlsx")
+
+ggplot(alunos_se, aes(x = t_env, y = esp_vida)) +
+  geom_point(shape = 21, size = 2.8, fill = "lightblue", col = "blue") + 
+  geom_smooth(method = "lm", col = "tomato", se = FALSE, formula = "y ~ x") +
+  stat_regline_equation(aes(label = paste(..eq.label..,..rr.label..,sep = "~~"))) + 
+  labs(x = "Taxa de Envelhecimento", y = "Expectativa de Vida",
+       title = "Gráfico de Regressão") + 
+  theme_light()
+
+ggsave(filename = "figuras/grafico_regressao2.png")
+
+```
+
+# Correlação
+```{r}
+setwd("~/R/cursos/marcel_santos/evento_aula2")
+
+dados <-  read_excel("dados/ind_socio_econ.xlsx")
+dados.ok <- dados[,3:8]
+
+cor.data <- round(cor(dados.ok),2)
+```
+
+```{r}
+install.packages("rgdal")
+install.packages("raster")
+install.packages("sf")
+
+setwd("C:/Users/jmhbu/OneDrive/Documentos/R/cursos/marcel_santos/evento_aula3/")
+source("evento_aula3/scripts/mapa_relevo.R")
+
+meu_mapa('SP')
+```
+
+# Função `for`
+```{r}
+# usar o snippet da função for
+# depois substituir "variable" e "vector"
+
+for (i in c("AL","SP","SC")) {
+  meu_mapa(i)
+}
+
+
+
+for (i in -5:5) {
+  print(c("s",i))
+}
+
+# qual é a soma dos valores de a?
+a <- c(423,464,69,519,123,258)
+
+# solução
+
+x <- 0
+
+for(i in a){
+  x <- x + i
+}
+print(x)
+
+# e se for a soma dos valores de b
+b <- c(51,36,123,98,23,37,63,3)
+
+x <- 0
+for(i in b){
+  x <- x + i
+}
+print(x)
+
+soma <- function(y){
+  x <- 0
+  for(i in y){
+    x <- x + i
+  }
+  print(x)}
+soma(a)
+soma(b)
+
+soma2 <- function(y,z){
+  x <- 0
+  c <- 0
+  for(i in y){
+    c <- c + 1
+    x <- z[c] + i
+    print(x)
+  }
+}
+
+soma2(a,b) 
+```
+
+```{r}
+area_cir <- function(r){
+  area <- pi * r^2
+  return(area)
+}
+
+area_ret <- function(b,h){
+  area <- b * h
+  return(area)
+}
+
+area_ret(2,3)
+
+base <- 1:10
+altura <- 6:15
+
+area_ret(base,altura)
+
+# esfera
+
+esfera <- function(raio){
+  circun <- 2*pi*raio
+  disco <- pi*raio^2
+  volume <- 3/4*pi*raio^3
+  saida <- c(circun,disco,volume)
+  return(saida)
+}
+
+esfera(3)
+
+raios <- 5:10
+
+esfera(raios)
+
+esfera <- function(raio){
+  circun <- 2*pi*raio
+  disco <- pi*raio^2
+  volume <- 3/4*pi*raio^3
+  saida <- data.frame(circ = circun,area = disco,vol = volume)
+  return(saida)
+}
+
+
+
+```
+
+# Exercícios do canal Teotonio de Carvalho
+https://www.youtube.com/watch?v=km9q5aT2xGI&t=347
+
+```{r}
+set.seed(3072020)
+
+y1 <- rnorm(5, mean = 10, sd = 1)
+y2 <- rnorm(5, mean = 11, sd = 1)
+
+dados <- data.frame(y = c(y1, y2),
+                    grupos = rep(c("A", "B"), each = 5))
+
+modelo <- lm(y ~ grupos, data = dados)
+summary(modelo)
+
+# se quisermos repetir essa análise 1000 vezes podemos usar alguns recursos.
+
+# loop=========================================================================
+
+# Exemplo
+for (i in 1:10) {
+  print(paste0("O valor de i é:", i))
+}
+
+# Modelo 1
+
+set.seed(3072020)
+
+for (i in 1:10) {
+  y1 <- rnorm(5, mean = 10, sd = 1)
+  y2 <- rnorm(5, mean = 11, sd = 1)
+
+  dados <- data.frame(y = c(y1, y2),
+                    grupos = rep(c("A", "B"), each = 5))
+
+modelo <- lm(y ~ grupos, data = dados)
+print(summary(modelo))
+}
+
+# pegando apenas o valor de p no Modelo 1
+sumario <- summary(modelo)
+
+sumario$coefficients
+str(sumario$coefficients)
+
+sumario$coefficients[2,4] # para pegar apenas o valor de p
+
+# Inserindo apenas o valor de p no loop
+
+set.seed(3072020)
+
+for (i in 1:10) {
+  y1 <- rnorm(5, mean = 10, sd = 1)
+  y2 <- rnorm(5, mean = 11, sd = 1)
+
+  dados <- data.frame(y = c(y1, y2),
+                    grupos = rep(c("A", "B"), each = 5))
+
+modelo <- lm(y ~ grupos, data = dados)
+sumario <- summary(modelo)
+p <- sumario$coefficients[2,4]
+print(p)
+}
+
+# O procedimento acima calcula o valor de 10x, mas salva somente o último valor.
+# para salvarmos os 10 valores...
+
+set.seed(3072020)
+nsims = 1000
+nsamples <- 20
+p <- rep(NA,nsims)
+for (i in 1:nsims) {
+  y1 <- rnorm(nsamples, mean = 10, sd = 1)
+  y2 <- rnorm(nsamples, mean = 11, sd = 1)
+
+  dados <- data.frame(y = c(y1, y2),
+                    grupos = rep(c("A", "B"), each = nsamples))
+
+modelo <- lm(y ~ grupos, data = dados)
+sumario <- summary(modelo)
+p[i] <- sumario$coefficients[2,4]
+}
+
+p<=0.05
+
+sum(p<=0.05) # quando peço a somatória de valor lógico, o R conta o número de TRUE
+
+100 * sum(p <= 0.05) / nsims
+```

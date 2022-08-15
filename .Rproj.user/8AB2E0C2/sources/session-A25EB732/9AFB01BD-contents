@@ -1,0 +1,639 @@
+---
+title: "Teste de Regulação de Emoções"
+author: "Maurício Bueno"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+  word_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+# Carregar pacotes
+```{r}
+library(psych)
+library(tidyverse)
+library(readxl)
+library(expss)
+library(stats)
+library(mirt)
+library(knitr)
+# library(pander)
+```
+
+# Importar o banco de dados
+```{r}
+df1 <- read_xlsx("TRE_analise.xlsx")
+
+glimpse(df1)
+```
+
+# Transformar DASS em números
+```{r}
+names(df1) %>% as.data.frame()
+
+
+recode(df1[ ,c(64:84)]) <- c("0 - Não se aplicou de maneira alguma" ~ 0,
+                             "0 Não aconteceu comigo nessa semana"~ 0,
+                             "1 - Aplicou-se em algum grau, ou por pouco de tempo" ~ 1,
+                             "1 Aconteceu comigo algumas vezes na semana" ~ 1,
+                             "2 - Aplicou-se em um grau considerável, ou por uma boa parte do tempo" ~ 2,
+                             "2 Aconteceu comigo em boa parte da semana" ~ 2,
+                             "3 - Aplicou-se muito, ou na maioria do tempo" ~ 3,
+                             "3 Aconteceu comigo na maior parte do tempo da semana" ~ 3)
+
+df2 <- df1 #salvando antes de trasnformar variáveis DASS em numeric
+
+df1$DASS_01 <- as.numeric(df1$DASS_01)
+df1$DASS_02 <- as.numeric(df1$DASS_02)
+df1$DASS_03 <- as.numeric(df1$DASS_03)
+df1$DASS_04 <- as.numeric(df1$DASS_04)
+df1$DASS_05 <- as.numeric(df1$DASS_05)
+df1$DASS_06 <- as.numeric(df1$DASS_06)
+df1$DASS_07 <- as.numeric(df1$DASS_07)
+df1$DASS_08 <- as.numeric(df1$DASS_08)
+df1$DASS_09 <- as.numeric(df1$DASS_09)
+df1$DASS_10 <- as.numeric(df1$DASS_10)
+df1$DASS_11 <- as.numeric(df1$DASS_11)
+df1$DASS_12 <- as.numeric(df1$DASS_12)
+df1$DASS_13 <- as.numeric(df1$DASS_13)
+df1$DASS_14 <- as.numeric(df1$DASS_14)
+df1$DASS_15 <- as.numeric(df1$DASS_15)
+df1$DASS_16 <- as.numeric(df1$DASS_16)
+df1$DASS_17 <- as.numeric(df1$DASS_17)
+df1$DASS_18 <- as.numeric(df1$DASS_18)
+df1$DASS_19 <- as.numeric(df1$DASS_19)
+df1$DASS_20 <- as.numeric(df1$DASS_20)
+df1$DASS_21 <- as.numeric(df1$DASS_21)
+
+names(df1) %>% as.data.frame()
+
+# Cálculo das pontuações na DASS
+
+df1$DASS_est <- df1 %>% select(64,69,71,74,75,77,81) %>% rowMeans()
+df1$DASS_ans <- df1 %>% select(65,67,70,72,78,82,83) %>% rowMeans()
+df1$DASS_dep <- df1 %>% select(66,68,73,76,79,80,84) %>% rowMeans()
+
+df1 %>% select(64,69,71,74,75,77,81) %>% omega(poly=TRUE)
+df1 %>% select(65,67,70,72,78,82,83) %>% omega(poly=TRUE)
+df1 %>% select(66,68,73,76,79,80,84) %>% omega(poly=TRUE)
+```
+
+# Propriedades psicométricas do QRE
+```{r}
+# Fator: Reavaliação Cognitiva
+df1$QRE_reava <- df1 %>% select(QRE_01,QRE_03,QRE_05,QRE_07,QRE_08,QRE_10) %>% rowMeans()
+# Fator: Supressão
+df1$QRE_supre <- df1 %>% select(QRE_02,QRE_04,QRE_06,QRE_09) %>% rowMeans()
+
+df1 %>% select(QRE_01,QRE_03,QRE_05,QRE_07,QRE_08,QRE_10) %>% omega(poly = TRUE)
+df1 %>% select(QRE_02,QRE_04,QRE_06,QRE_09) %>% omega(poly = TRUE)
+```
+
+
+# Trasnformação das respostas do TRE em pontuações dicotômicas
+```{r}
+df1$tre_cod_01 <- ifelse(df1$tre_01 == 4 | df1$tre_01 == 5, 1, 0)
+df1$tre_cod_02 <- ifelse(df1$tre_02 == 1 | df1$tre_02 == 2, 1, 0)
+df1$tre_cod_03 <- ifelse(df1$tre_03 == 4 | df1$tre_03 == 5, 1, 0)
+df1$tre_cod_04 <- ifelse(df1$tre_04 == 1 | df1$tre_04 == 2, 1, 0)
+df1$tre_cod_05 <- ifelse(df1$tre_05 == 1 | df1$tre_05 == 2, 1, 0)
+df1$tre_cod_06 <- ifelse(df1$tre_06 == 4 | df1$tre_06 == 5, 1, 0)
+df1$tre_cod_07 <- ifelse(df1$tre_07 == 3, 1, 0)
+df1$tre_cod_08 <- ifelse(df1$tre_08 == 3, 1, 0)
+# df1$tre_cod_09 <- ifelse(df1$tre_09 == 4 | df1$tre_09 == 5, 1, 0)
+df1$tre_cod_10 <- ifelse(df1$tre_10 == 1 | df1$tre_10 == 2, 1, 0)
+df1$tre_cod_11 <- ifelse(df1$tre_11 == 4 | df1$tre_11 == 5, 1, 0)
+df1$tre_cod_12 <- ifelse(df1$tre_12 == 4 | df1$tre_12 == 5, 1, 0)
+df1$tre_cod_13 <- ifelse(df1$tre_13 == 4 | df1$tre_13 == 5, 1, 0)
+df1$tre_cod_14 <- ifelse(df1$tre_14 == 1 | df1$tre_14 == 2, 1, 0)
+df1$tre_cod_15 <- ifelse(df1$tre_15 == 1 | df1$tre_15 == 2, 1, 0)
+df1$tre_cod_16 <- ifelse(df1$tre_16 == 4 | df1$tre_16 == 5, 1, 0)
+df1$tre_cod_17 <- ifelse(df1$tre_17 == 3 | df1$tre_17 == 4 | df1$tre_17 == 5, 1, 0)
+df1$tre_cod_18 <- ifelse(df1$tre_18 == 3 | df1$tre_18 == 4 | df1$tre_18 == 5, 1, 0)
+df1$tre_cod_19 <- ifelse(df1$tre_19 == 1 | df1$tre_19 == 2, 1, 0)
+df1$tre_cod_20 <- ifelse(df1$tre_20 == 1 | df1$tre_20 == 2, 1, 0)
+df1$tre_cod_21 <- ifelse(df1$tre_21 == 4 | df1$tre_21 == 5, 1, 0)
+df1$tre_cod_22 <- ifelse(df1$tre_22 == 4 | df1$tre_22 == 5, 1, 0)
+df1$tre_cod_23 <- ifelse(df1$tre_23 == 4 | df1$tre_23 == 5, 1, 0)
+df1$tre_cod_24 <- ifelse(df1$tre_24 == 1 | df1$tre_24 == 2, 1, 0)
+df1$tre_cod_25 <- ifelse(df1$tre_25 == 1 | df1$tre_25 == 2, 1, 0)
+df1$tre_cod_26 <- ifelse(df1$tre_26 == 4 | df1$tre_26 == 5, 1, 0)
+df1$tre_cod_27 <- ifelse(df1$tre_27 == 4 | df1$tre_27 == 5, 1, 0)
+df1$tre_cod_28 <- ifelse(df1$tre_28 == 1 | df1$tre_28 == 2 | df1$tre_28 == 3, 1, 0)
+df1$tre_cod_29 <- ifelse(df1$tre_29 == 1 | df1$tre_29 == 2, 1, 0)
+df1$tre_cod_30 <- ifelse(df1$tre_30 == 1 | df1$tre_30 == 2, 1, 0)
+df1$tre_cod_31 <- ifelse(df1$tre_31 == 4 | df1$tre_31 == 5, 1, 0)
+df1$tre_cod_32 <- ifelse(df1$tre_32 == 1 | df1$tre_32 == 2, 1, 0)
+df1$tre_cod_33 <- ifelse(df1$tre_33 == 1 | df1$tre_33 == 2 | df1$tre_33 == 3, 1, 0)
+df1$tre_cod_34 <- ifelse(df1$tre_34 == 1 | df1$tre_34 == 2, 1, 0)
+df1$tre_cod_35 <- ifelse(df1$tre_35 == 1 | df1$tre_35 == 2, 1, 0)
+df1$tre_cod_36 <- ifelse(df1$tre_36 == 4 | df1$tre_36 == 5, 1, 0)
+df1$tre_cod_37 <- ifelse(df1$tre_37 == 4 | df1$tre_37 == 5, 1, 0)
+df1$tre_cod_38 <- ifelse(df1$tre_38 == 4 | df1$tre_38 == 5, 1, 0)
+df1$tre_cod_39 <- ifelse(df1$tre_39 == 1 | df1$tre_39 == 2, 1, 0)
+df1$tre_cod_40 <- ifelse(df1$tre_40 == 1 | df1$tre_40 == 2, 1, 0)
+
+
+names(df1) %>% as.data.frame()
+```
+
+# Análise fatorial
+```{r}
+
+df1 %>% select(c(85:123)) %>% scree(pc = FALSE)
+
+efa1 <- df1 %>% select(85:123) %>% fa(nfactors = 2,
+                              cor = "tet",
+                              fm = "pa",
+                              rotate = "geominQ")
+
+# eliminanção dos itens 4,6,7,8,14,15,16,23,27,28,31,33,35
+
+# novo scree
+
+df1 %>% select(tre_cod_01,
+tre_cod_02,
+tre_cod_03,
+tre_cod_05,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_36,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% scree(pc=FALSE)
+
+
+efa2 <- df1 %>% select(tre_cod_01,
+tre_cod_03,
+tre_cod_05,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_36,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% 
+  fa(nfactors = 2,
+     cor = "tet",
+     fm = "pa",
+     rotate = "geominQ")
+
+# eliminação do iten 5 por apresentar carga superior a 0,3 nos dois fatores.
+
+# novo scree
+
+df1 %>% select(tre_cod_01,
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_36,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% scree(pc=FALSE)
+
+efa3 <- df1 %>% select(tre_cod_01,
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_36,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% 
+  fa(nfactors = 2,
+     cor = "tet",
+     fm = "pa",
+     rotate = "geominQ")
+
+# eliminando os itens 1 por carga inferior a 0,3
+# eliminando os itens 36 por cargas superiores a 0,3 nos dois fatores
+
+# novo scree
+
+df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% scree(pc=FALSE)
+
+efa4 <- df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_11,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% 
+  fa(nfactors = 2,
+     cor = "tet",
+     fm = "pa",
+     rotate = "geominQ")
+
+# eliminando itens com cargas inferiores a 0.3: 11
+
+
+# novo scree
+
+df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% scree(pc=FALSE)
+
+efa5 <- df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_19,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% 
+  fa(nfactors = 2,
+     cor = "tet",
+     fm = "pa",
+     rotate = "geominQ")
+
+# i19 apresentou carga no F2 (eficaz), mas é um item de estratégia ineficaz
+
+# novo scree
+
+df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% scree(pc=FALSE)
+
+# Solução fatorial final===== 
+
+efa6 <- df1 %>% select(
+tre_cod_02,
+tre_cod_03,
+tre_cod_10,
+tre_cod_12,
+tre_cod_13,
+tre_cod_17,
+tre_cod_18,
+tre_cod_20,
+tre_cod_21,
+tre_cod_22,
+tre_cod_24,
+tre_cod_25,
+tre_cod_26,
+tre_cod_29,
+tre_cod_30,
+tre_cod_32,
+tre_cod_34,
+tre_cod_37,
+tre_cod_38,
+tre_cod_39,
+tre_cod_40) %>% 
+  fa(nfactors = 2,
+     cor = "tet",
+     fm = "pa",
+     rotate = "geominQ")
+
+efa1$loadings
+efa2$loadings
+efa3$loadings
+efa4$loadings
+efa5$loadings
+efa6$loadings
+
+# Exportar banco de dados para fazer EFA no Factor e MPlus
+# writexl::write_xlsx(df1[,85:123],"tre_dic.xlsx")
+# write_csv(df1[,85:123],"tre_dic.csv")
+
+```
+
+# Fidedignidade
+```{r}
+df1 %>% names() %>% as.data.frame()
+
+# Fidedignidade do fator 1 (Estratégias Ineficazes)
+df1 %>% select(86,93,103,107,108,112,113,115,117,122,123) %>% omega(poly = TRUE)
+
+# Fidedignidade do fator 2 (Estratégias Eficazes)
+df1 %>% select(87,95,96,100,101,104,105,109,120,121) %>% omega(poly = TRUE)
+
+# Cálculo das pontuações nos fatores
+
+# Fator 1 (Estratégias Ineficazes)
+df1$TRE_ine <- df1 %>% select(86,93,103,107,108,112,113,115,117,122,123) %>% rowSums()
+
+# Fator 2 (Estratégias Eficazes)
+df1$TRE_efi <- df1 %>% select(87,95,96,100,101,104,105,109,120,121) %>% rowSums()
+
+```
+
+# Validade com base nas relações com variáveis externas
+```{r}
+names(df1) %>% as.data.frame()
+correlações <- corr.test(df1[124:130])
+
+correlações$stars %>% knitr::kable()
+```
+
+# Análise com TRI
+```{r}
+# Gerar modelos
+
+# df1 %>% select(86,93,103,107,108,112,113,115,117,122,123) # Fator 1 - Ineficazes
+# df1 %>% select(87,95,96,100,101,104,105,109,120,121) # Fator 2 - Eficazes
+
+## Rasch (parâmetro b estimado e parâmetro a constante e igual a 1)
+mod_ine_rasch <- 
+  df1 %>% select(86,93,103,107,108,112,113,115,117,122,123) %>% 
+  mirt(1, itemtype = "Rasch", SE = TRUE)
+
+mod_efi_rasch <- 
+  df1 %>% select(87,95,96,100,101,104,105,109,120,121) %>% 
+  mirt(1, itemtype = "Rasch", SE = TRUE)
+
+## 2 parâmetros (estima tanto o parâmetro b quanto o a)
+
+mod_ine_2PL <- 
+  df1 %>% select(86,93,103,107,108,112,113,115,117,122,123) %>% 
+  mirt(1, itemtype = "2PL", SE = TRUE)
+
+mod_efi_2PL <- 
+  df1 %>% select(87,95,96,100,101,104,105,109,120,121) %>% 
+  mirt(1, itemtype = "2PL", SE = TRUE)
+
+# Índices de ajuste aos modelos
+itemfit(mod_ine_rasch,fit_stats = 'infit') 
+itemfit(mod_efi_rasch,fit_stats = 'infit')
+itemfit(mod_ine_2PL,fit_stats = 'infit') %>% select(infit, outfit) %>% summary() %>% kable()
+itemfit(mod_efi_2PL,fit_stats = 'infit') %>% select(infit, outfit) %>% summary() %>% kable()
+
+# Parâmetros dos itens
+coef(mod_ine_rasch, simplify=TRUE,IRTpars=TRUE)
+coef(mod_efi_rasch, simplify=TRUE,IRTpars=TRUE)
+coef_tri_ine <- coef(mod_ine_2PL, simplify=TRUE,IRTpars=TRUE)
+coef_tri_efi <- coef(mod_efi_2PL, simplify=TRUE,IRTpars=TRUE)
+
+coef_tri_ine$items %>% as.data.frame() %>% select(1:2) %>% kable()
+coef_tri_efi$items %>% as.data.frame() %>% select(1:2) %>% kable()
+
+coef_tri_ine$items %>% as.data.frame() %>% select(1:2) %>% summary() %>% kable()
+coef_tri_efi$items %>% as.data.frame() %>% select(1:2) %>% summary() %>% kable()
+
+# plot do modelo
+plot(mod_ine_rasch)
+plot(mod_efi_rasch)
+plot(mod_ine_2PL)
+plot(mod_efi_2PL)
+
+# CCI de todos os itens
+plot(mod_ine_rasch,type="trace")
+plot(mod_efi_rasch,type="trace")
+plot(mod_ine_2PL,type="trace")
+plot(mod_efi_2PL,type="trace")
+
+# Curva de informação de todos os itens
+plot(mod_ine_rasch,type="infotrace")
+plot(mod_efi_rasch,type="infotrace")
+plot(mod_ine_2PL,type="infotrace")
+plot(mod_efi_2PL,type="infotrace")
+
+# Curva de informação e erro
+plot(mod_ine_rasch, type="infoSE")
+plot(mod_efi_rasch, type="infoSE")
+plot(mod_ine_2PL, type="infoSE")
+plot(mod_efi_2PL, type="infoSE")
+
+names(df1)
+# comparar modelos
+# Olhar se a diferença entre os qui-quadrados é significativa
+# Se for, o menor valor de AIC é o modelo mais ajustado.
+anova(mod_ine_rasch,mod_ine_2PL) %>% kable()
+anova(mod_efi_rasch,mod_efi_2PL) %>% kable()
+
+# Avaliar o modelo pelo M2 (M ao quadrado), que mostra RAMSEA, SRMSR, TLE e CFI
+
+## Como essa análise é mais demorada, compensa colocar mais processadores no computdor...
+mirtCluster() # acelerador do processamento (passa a usar mais processadores do computador)
+
+M2(mod_ine_rasch)
+M2(mod_efi_rasch)
+M2(mod_ine_2PL)
+M2(mod_efi_2PL)
+
+# para observar visualmente o índice de ajuste
+
+plot(mod_ine_rasch, MI=200)
+plot(mod_efi_rasch, MI=200)
+plot(mod_ine_2PL, MI=200)
+plot(mod_efi_2PL, MI=200)
+
+# fatores obtidos
+summary(mod_ine_rasch)
+summary(mod_efi_rasch)
+summary(mod_ine_2PL)
+summary(mod_efi_2PL)
+```
+
+# exportar arquivo para csv
+```{r}
+write.csv(df1, "df1.csv")
+```
+
+# Estatísticas descritivas para descrição dos participantes
+
+```{r}
+names(df1) %>% as.data.frame()
+
+install.packages("janitor")
+library(janitor)
+
+df1 %>%          
+  tabyl(sexo) %>%
+  adorn_totals() %>%
+  mutate("%" = percent*100) %>%
+  kable() 
+
+df1 %>%          
+  tabyl(cor) %>%
+  adorn_totals() %>%
+  mutate("%" = percent*100) %>%
+  kable() 
+
+df1$escolaridade[df1$escolaridade == "Fundamental completo"] <-"Ensino fundamental"
+df1$escolaridade[df1$escolaridade == "Fundamental incompleto"] <-"Ensino fundamental"
+df1$escolaridade[df1$escolaridade == "Médio completo"] <-"Ensino médio"
+df1$escolaridade[df1$escolaridade == "Sem escolaridade"] <-"Ensino fundamental"
+df1$escolaridade[df1$escolaridade == "Sem instrução"] <-"Ensino fundamental"
+df1$escolaridade[df1$escolaridade == "Superior completo"] <-"Ensino superior"
+
+
+df1 %>%          
+  tabyl(escolaridade) %>%
+  adorn_totals() %>%
+  mutate("%" = percent*100) %>%
+  kable() 
+
+round(mean(df1$idade, na.rm = TRUE),digits = 2)
+round(sd(df1$idade, na.rm = TRUE),digits = 2)
+
+round(describe(df1$idade),digits = 2) %>% kable() 
+```
+
